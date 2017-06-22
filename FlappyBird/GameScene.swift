@@ -17,6 +17,10 @@ class GameScene: SKScene {
     
     //SKView上にシーンが表示されたときに呼ばれるメソッド(5.2)
     override func didMove(to view: SKView) {
+        
+        //重力を設定(7.1)
+        physicsWorld.gravity = CGVector(dx: 0.0, dy: -4.0)
+        
         //背景色を設定(5.2)
         backgroundColor = UIColor(colorLiteralRed: 0.15, green: 0.75, blue: 0.90, alpha: 1)
         
@@ -67,6 +71,13 @@ class GameScene: SKScene {
             
             //スプライトにアニメーションを設定する(6.1)
             l_GroundSprite.run(L_RepeatScrollGround)
+            
+            //スプライトに物理演算を設定する(7.2)
+            l_GroundSprite.physicsBody = SKPhysicsBody(rectangleOf: l_GroundTexture.size())
+            
+            //衝突の時に動かないように設定する(7.2)
+            l_GroundSprite.physicsBody?.isDynamic = false
+            
             
             //シーンにスプライトを追加する(5.3) →V_ScrollNodeに追加(6.1)
             V_ScrollNode.addChild(l_GroundSprite)
@@ -159,10 +170,22 @@ class GameScene: SKScene {
             l_Under.position = CGPoint(x: 0.0, y: l_Under_Wall_y)
             l_Wall.addChild(l_Under)
             
+            //スプライトに物理演算を設定する(7.2)
+            l_Under.physicsBody = SKPhysicsBody(rectangleOf: l_WallTexture.size())
+            
+            //衝突の時に動かないように設定する(7.2)
+            l_Under.physicsBody?.isDynamic = false
+            
             //上側の壁を作成(6.3)
             let l_Upper = SKSpriteNode(texture:l_WallTexture)
             l_Upper.position = CGPoint(x: 0.0, y: l_Under_Wall_y + l_WallTexture.size().height + l_Slit_Length)
             l_Wall.addChild(l_Upper)
+
+            //スプライトに物理演算を設定する(7.2)
+            l_Upper.physicsBody = SKPhysicsBody(rectangleOf: l_WallTexture.size())
+            
+            //衝突の時に動かないように設定する(7.2)
+            l_Upper.physicsBody?.isDynamic = false
             
             //上下の壁にアニメーションを設定する(6.3)
             l_Wall.run(l_WallAnimation)
@@ -199,12 +222,22 @@ class GameScene: SKScene {
         V_Bird = SKSpriteNode(texture: l_BirdTextureA)
         V_Bird.position = CGPoint(x: self.frame.size.width * 0.2, y:self.frame.size.height * 0.7)
         
+        //物理演算を設定(7.1) *テキストではV_Bird.size.heightとなっているがl_BirdTextureA.size().heightに修正
+        V_Bird.physicsBody = SKPhysicsBody(circleOfRadius: l_BirdTextureA.size().height / 2.0)
+        
         //アニメーションを設定(6.4)
         V_Bird.run(l_Flap)
         
         //スプライトを追加する(6.4)
         addChild(V_Bird)
+    }
+    
+    //画面をタップしたときに呼ばれる(7.3)
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        //鳥の速度を0にする(7.3)  ?重力を0?
+        V_Bird.physicsBody?.velocity = CGVector.zero
         
-        
+        //鳥に縦方向の力を与える(7.3)
+        V_Bird.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 15))
     }
 }
