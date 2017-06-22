@@ -7,12 +7,27 @@
 //
 
 import UIKit
+import SpriteKit  //(3.1)
 
 class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        
+        //SKViewに型を変換する(3.1)
+        let L_SkView = self.view as! SKView
+        
+        //FPSを表示する（画面が1秒間に何回更新されているかを示すFPSを画面の右下に表示）(3.1)
+        L_SkView.showsFPS = true
+        
+        //ノードの数を表示する（ノードが幾つ表示されているかを画面の右下に表示）(3.1)
+        L_SkView.showsNodeCount = true
+        
+        //ビューと同じサイズでシーンを作成する(3.1)
+        let L_Scene = GameScene(size:L_SkView.frame.size)  //ゲームシーンクラスに変更(5.1)同じおおきさじゃないの？
+        
+        //ビューにシーンを表示する(3.1)
+        L_SkView.presentScene(L_Scene)
     }
 
     override func didReceiveMemoryWarning() {
