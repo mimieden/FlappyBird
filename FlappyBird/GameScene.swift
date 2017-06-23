@@ -178,7 +178,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let l_Under_Wall_y = CGFloat(l_Under_Wall_Lowest_y + l_Random_y)
             
             //キャラが通り抜ける隙間の長さ(6.3)
-            let l_Slit_Length = self.frame.size.height / 4   //テキストでは6だが難しいので5に変更
+            let l_Slit_Length = self.frame.size.height / 4   //テキストでは6だが難しいので4に変更
             
             //下側の壁を作成(6.3)
             let l_Under = SKSpriteNode(texture:l_WallTexture)
@@ -207,6 +207,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             //スコアアップ用のノード(7.4)
             let l_ScoreNode = SKNode()
             l_ScoreNode.position =  CGPoint(x: l_Upper.size.width + self.V_Bird.size.width / 2, y: self.frame.height / 2.0)
+            l_ScoreNode.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: l_Upper.size.width, height: self.frame.size.height))
             l_ScoreNode.physicsBody?.isDynamic = false
             l_ScoreNode.physicsBody?.categoryBitMask = self.L_ScoreCategory
             l_ScoreNode.physicsBody?.contactTestBitMask = self.L_BirdCategory

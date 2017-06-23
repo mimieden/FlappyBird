@@ -28,6 +28,9 @@ class ViewController: UIViewController {
         
         //ビューにシーンを表示する(3.1)
         L_SkView.presentScene(L_Scene)
+        
+        //衝突判定のPhysicsBodyが見えるようにする
+        //L_SkView.showsPhysics = true
     }
 
     override func didReceiveMemoryWarning() {
