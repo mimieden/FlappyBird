@@ -14,7 +14,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     //(6.1)
     var V_ScrollNode:SKNode! //(6.1)
     var V_WallNode:SKNode!   //(6.3)
-    var V_Bird:SKNode!       //(6.4)
+    var V_Bird:SKSpriteNode! //(6.4)
     
     //衝突判定カテゴリ(7.4)
     let L_BirdCategory: UInt32 = 1 << 0    //0...00001
@@ -86,6 +86,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             //スプライトに物理演算を設定する(7.2)
             l_GroundSprite.physicsBody = SKPhysicsBody(rectangleOf: l_GroundTexture.size())
+            
+            //衝突のカテゴリ設定(7.4)
+            l_GroundSprite.physicsBody?.categoryBitMask = L_GroundCategory
             
             //衝突の時に動かないように設定する(7.2)
             l_GroundSprite.physicsBody?.isDynamic = false
@@ -203,8 +206,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             //スコアアップ用のノード(7.4)
             let l_ScoreNode = SKNode()
-            //l_ScoreNode.position =  CGPoint(x: l_Upper.size.width + self.V_Bird.size().width / 2, y: self.frame.height / 2.0)  //V_Bird.seze().widthでエラー
-            l_ScoreNode.position =  CGPoint(x: l_Upper.size.width, y: self.frame.height / 2.0)  //仮おき (確認中)
+            l_ScoreNode.position =  CGPoint(x: l_Upper.size.width + self.V_Bird.size.width / 2, y: self.frame.height / 2.0)
             l_ScoreNode.physicsBody?.isDynamic = false
             l_ScoreNode.physicsBody?.categoryBitMask = self.L_ScoreCategry
             l_ScoreNode.physicsBody?.contactTestBitMask = self.L_BirdCategory
@@ -245,9 +247,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         V_Bird = SKSpriteNode(texture: l_BirdTextureA)
         V_Bird.position = CGPoint(x: self.frame.size.width * 0.2, y:self.frame.size.height * 0.7)
         
-        //物理演算を設定(7.1) *テキストではV_Bird.size.heightとなっているがl_BirdTextureA.size().heightに修正 (確認中)
-        //V_Bird.physicsBody = SKPhysicsBody(circleOfRadius: V_Bird.size().height / 2.0)
-        V_Bird.physicsBody = SKPhysicsBody(circleOfRadius: l_BirdTextureA.size().height / 2.0)
+        //物理演算を設定(7.1)
+        V_Bird.physicsBody = SKPhysicsBody(circleOfRadius: V_Bird.size.height / 2.0)
         
         //衝突したときに回転させない(7.4)
         V_Bird.physicsBody?.allowsRotation = false
@@ -266,10 +267,63 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     //画面をタップしたときに呼ばれる(7.3)
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        //鳥の速度を0にする(7.3)  ?重力を0?
-        V_Bird.physicsBody?.velocity = CGVector.zero
         
-        //鳥に縦方向の力を与える(7.3)
-        V_Bird.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 15))
+        //ゲーム中（= スクロールのスピード > 0）のタップ処理(7.5)
+        if V_ScrollNode.speed > 0 {                             //ここも鳥の速度で判定したらダメなのか？
+          //鳥の速度を0にする(7.3)  ?重力を0?
+          V_Bird.physicsBody?.velocity = CGVector.zero
+          
+          //鳥に縦方向の力を与える(7.3)
+          V_Bird.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 15))
+        //ゲーム中以外（= 鳥のスピード = 0）のタップ処理(7.5)
+        } else if V_Bird.speed == 0 {
+            F_Restart()
+        }
+    }
+    
+    //SKPhysicsContactDelegateのメソッド。衝突したときに呼ばれる(7.4)
+    func didBegin(_ contact: SKPhysicsContact) {
+        //ゲームオーバーのときは何もしない
+        if V_ScrollNode.speed <= 0 {
+            return
+        }
+        
+        //衝突時のロジック
+        if (contact.bodyA.categoryBitMask & L_ScoreCategry) == L_ScoreCategry || (contact.bodyB.categoryBitMask & L_ScoreCategry) == L_ScoreCategry {
+            // スコア用の物体と衝突した
+            print("ScoreUp")
+            V_Score += 1
+        } else {
+            // 壁か地面と衝突した
+            print("GameOver")
+            
+            // スクロールを停止させる
+            V_ScrollNode.speed = 0
+            
+            V_Bird.physicsBody?.collisionBitMask = L_GroundCategory
+            
+            let roll = SKAction.rotate(byAngle: CGFloat(Double.pi) * CGFloat(V_Bird.position.y) * 0.01, duration:1)
+            V_Bird.run(roll, completion:{
+                self.V_Bird.speed = 0
+            })
+        }
+    }
+    
+    //リスタート（リトライ）処理(7.5)
+    func F_Restart() {
+        
+        //スコアを0にする
+        V_Score = 0
+        
+        //鳥の設定
+        V_Bird.position = CGPoint(x: self.frame.size.width * 0.2, y:self.frame.size.height * 0.7)
+        V_Bird.physicsBody?.velocity = CGVector.zero
+        V_Bird.physicsBody?.collisionBitMask = L_GroundCategory | L_WallCategory
+        V_Bird.zRotation = 0.0
+        
+        V_WallNode.removeAllChildren()
+        
+        V_Bird.speed = 1
+        V_ScrollNode.speed = 1
     }
 }
