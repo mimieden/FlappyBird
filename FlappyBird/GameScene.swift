@@ -24,6 +24,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     //スコア(7.4)
     var V_Score = 0
+    var V_ScoreLabelNode: SKLabelNode!                       //(8.2)
+    var V_BestScoreLabelNode: SKLabelNode!                   //(8.2)
+    let L_UserDefaults:UserDefaults = UserDefaults.standard  //(8.1)
     
     //SKView上にシーンが表示されたときに呼ばれるメソッド(5.2)
     override func didMove(to view: SKView) {
@@ -45,10 +48,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         V_ScrollNode.addChild(V_WallNode)
         
         //各種スプライトを生成する処理をメソッドに分割(6.2)
-        F_SetUpGround()  //(6.2)
-        F_SetUpCloud()   //(6.2)
-        F_SetUpWall()    //(6.3)
-        F_SetUpBird()    //(6.4)
+        F_SetUpGround()      //(6.2)
+        F_SetUpCloud()       //(6.2)
+        F_SetUpWall()        //(6.3)
+        F_SetUpBird()        //(6.4)
+        F_SetUpScoreLabel()  //(8.2)
     }
     
     //地面のスクロールを関数化(6.2)
@@ -291,14 +295,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //衝突時のロジック
         if (contact.bodyA.categoryBitMask & L_ScoreCategory) == L_ScoreCategory || (contact.bodyB.categoryBitMask & L_ScoreCategory) == L_ScoreCategory {
-            // スコア用の物体と衝突した
+            //スコア用の物体と衝突した
             print("ScoreUp")
             V_Score += 1
+            V_ScoreLabelNode.text = "Score:\(V_Score)"  //(8.2)
+            
+            //ベストスコア更新か確認する(8.1)
+            var v_BestScore = L_UserDefaults.integer(forKey: "BEST")
+            if V_Score > v_BestScore {
+                v_BestScore = V_Score
+                V_BestScoreLabelNode.text = "Best Score:\(v_BestScore)"  //(8.2)
+                L_UserDefaults.set(v_BestScore, forKey: "BEST")
+                L_UserDefaults.synchronize()
+            }
+            
         } else {
-            // 壁か地面と衝突した
+            //壁か地面と衝突した
             print("GameOver")
             
-            // スクロールを停止させる
+            //スクロールを停止させる
             V_ScrollNode.speed = 0
             
             V_Bird.physicsBody?.collisionBitMask = L_GroundCategory
@@ -315,6 +330,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //スコアを0にする
         V_Score = 0
+        V_ScoreLabelNode.text = String("Score:\(V_Score)")  //(8.2)
         
         //鳥の設定
         V_Bird.position = CGPoint(x: self.frame.size.width * 0.2, y:self.frame.size.height * 0.7)
@@ -326,5 +342,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         V_Bird.speed = 1
         V_ScrollNode.speed = 1
+    }
+    
+    //スコア/ベストスコアの表示(8.2)
+    func F_SetUpScoreLabel() {
+        V_Score = 0
+        V_ScoreLabelNode = SKLabelNode()
+        V_ScoreLabelNode.fontColor = UIColor.black
+        V_ScoreLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 30)
+        V_ScoreLabelNode.zPosition = 100 //一番手前
+        V_ScoreLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
+        V_ScoreLabelNode.text = "Score:\(V_Score)"
+        self.addChild(V_ScoreLabelNode)
+        
+        V_BestScoreLabelNode = SKLabelNode()
+        V_BestScoreLabelNode.fontColor = UIColor.black
+        V_BestScoreLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 60)
+        V_BestScoreLabelNode.zPosition = 100 //一番手前
+        V_BestScoreLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
+        
+        let l_BestScore = L_UserDefaults.integer(forKey: "BEST")
+        V_BestScoreLabelNode.text = "Best Score:\(l_BestScore)"
+        self.addChild(V_BestScoreLabelNode)
     }
 }
