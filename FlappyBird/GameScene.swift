@@ -20,7 +20,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let L_BirdCategory: UInt32 = 1 << 0    //0...00001
     let L_GroundCategory: UInt32 = 1 << 1  //0...00010
     let L_WallCategory: UInt32 = 1 << 2    //0...00100
-    let L_ScoreCategry: UInt32 = 1 << 3    //0...01000 *スコア用の物体壁の間に設定し衝突したらスコアカウントアップ
+    let L_ScoreCategory: UInt32 = 1 << 3    //0...01000 *スコア用の物体壁の間に設定し衝突したらスコアカウントアップ
     
     //スコア(7.4)
     var V_Score = 0
@@ -178,7 +178,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let l_Under_Wall_y = CGFloat(l_Under_Wall_Lowest_y + l_Random_y)
             
             //キャラが通り抜ける隙間の長さ(6.3)
-            let l_Slit_Length = self.frame.size.height / 6
+            let l_Slit_Length = self.frame.size.height / 4   //テキストでは6だが難しいので5に変更
             
             //下側の壁を作成(6.3)
             let l_Under = SKSpriteNode(texture:l_WallTexture)
@@ -208,9 +208,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let l_ScoreNode = SKNode()
             l_ScoreNode.position =  CGPoint(x: l_Upper.size.width + self.V_Bird.size.width / 2, y: self.frame.height / 2.0)
             l_ScoreNode.physicsBody?.isDynamic = false
-            l_ScoreNode.physicsBody?.categoryBitMask = self.L_ScoreCategry
+            l_ScoreNode.physicsBody?.categoryBitMask = self.L_ScoreCategory
             l_ScoreNode.physicsBody?.contactTestBitMask = self.L_BirdCategory
-            l_Wall.addChild(l_Wall)
+            l_Wall.addChild(l_ScoreNode)
 
             //上下の壁にアニメーションを設定する(6.3)
             l_Wall.run(l_WallAnimation)
@@ -289,7 +289,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
         //衝突時のロジック
-        if (contact.bodyA.categoryBitMask & L_ScoreCategry) == L_ScoreCategry || (contact.bodyB.categoryBitMask & L_ScoreCategry) == L_ScoreCategry {
+        if (contact.bodyA.categoryBitMask & L_ScoreCategory) == L_ScoreCategory || (contact.bodyB.categoryBitMask & L_ScoreCategory) == L_ScoreCategory {
             // スコア用の物体と衝突した
             print("ScoreUp")
             V_Score += 1
