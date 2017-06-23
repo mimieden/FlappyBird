@@ -8,18 +8,30 @@
 
 import SpriteKit  //import UIKitを書き換え(5.1)
 
-class GameScene: SKScene {
+//プロトコルを追加(7.4)
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
     //(6.1)
     var V_ScrollNode:SKNode! //(6.1)
     var V_WallNode:SKNode!   //(6.3)
     var V_Bird:SKNode!       //(6.4)
     
+    //衝突判定カテゴリ(7.4)
+    let L_BirdCategory: UInt32 = 1 << 0    //0...00001
+    let L_GroundCategory: UInt32 = 1 << 1  //0...00010
+    let L_WallCategory: UInt32 = 1 << 2    //0...00100
+    let L_ScoreCategry: UInt32 = 1 << 3    //0...01000 *スコア用の物体壁の間に設定し衝突したらスコアカウントアップ
+    
+    //スコア(7.4)
+    var V_Score = 0
+    
     //SKView上にシーンが表示されたときに呼ばれるメソッド(5.2)
     override func didMove(to view: SKView) {
         
         //重力を設定(7.1)
-        physicsWorld.gravity = CGVector(dx: 0.0, dy: -4.0)
+        physicsWorld.gravity = CGVector(dx: 0.0, dy: -4.0)  //(7.1)
+        physicsWorld.contactDelegate = self                 //(7.4)
+        
         
         //背景色を設定(5.2)
         backgroundColor = UIColor(colorLiteralRed: 0.15, green: 0.75, blue: 0.90, alpha: 1)
@@ -60,7 +72,7 @@ class GameScene: SKScene {
         let L_RepeatScrollGround = SKAction.repeatForever(SKAction.sequence([l_MoveGround, l_ResetGround]))
         
         
-        //groundのスプライトをスクロール付きで配置する(6.1) ここの0~NeedGroundって秒？枚数？
+        //groundのスプライトをスクロール付きで配置する(6.1)
         stride(from: 0.0, to: l_NeedGround, by: 1.0).forEach { i in
             
             //テクスチャを指定してスプライトを作成する(5.3)
@@ -171,7 +183,8 @@ class GameScene: SKScene {
             l_Wall.addChild(l_Under)
             
             //スプライトに物理演算を設定する(7.2)
-            l_Under.physicsBody = SKPhysicsBody(rectangleOf: l_WallTexture.size())
+            l_Under.physicsBody = SKPhysicsBody(rectangleOf: l_WallTexture.size())  //(7.2)
+            l_Under.physicsBody?.categoryBitMask = self.L_WallCategory              //(7.4)
             
             //衝突の時に動かないように設定する(7.2)
             l_Under.physicsBody?.isDynamic = false
@@ -182,11 +195,21 @@ class GameScene: SKScene {
             l_Wall.addChild(l_Upper)
 
             //スプライトに物理演算を設定する(7.2)
-            l_Upper.physicsBody = SKPhysicsBody(rectangleOf: l_WallTexture.size())
+            l_Upper.physicsBody = SKPhysicsBody(rectangleOf: l_WallTexture.size())  //(7.2)
+            l_Upper.physicsBody?.categoryBitMask = self.L_WallCategory              //(7.4)
             
             //衝突の時に動かないように設定する(7.2)
             l_Upper.physicsBody?.isDynamic = false
             
+            //スコアアップ用のノード(7.4)
+            let l_ScoreNode = SKNode()
+            //l_ScoreNode.position =  CGPoint(x: l_Upper.size.width + self.V_Bird.size().width / 2, y: self.frame.height / 2.0)  //V_Bird.seze().widthでエラー
+            l_ScoreNode.position =  CGPoint(x: l_Upper.size.width, y: self.frame.height / 2.0)  //仮おき (確認中)
+            l_ScoreNode.physicsBody?.isDynamic = false
+            l_ScoreNode.physicsBody?.categoryBitMask = self.L_ScoreCategry
+            l_ScoreNode.physicsBody?.contactTestBitMask = self.L_BirdCategory
+            l_Wall.addChild(l_Wall)
+
             //上下の壁にアニメーションを設定する(6.3)
             l_Wall.run(l_WallAnimation)
             
@@ -222,8 +245,17 @@ class GameScene: SKScene {
         V_Bird = SKSpriteNode(texture: l_BirdTextureA)
         V_Bird.position = CGPoint(x: self.frame.size.width * 0.2, y:self.frame.size.height * 0.7)
         
-        //物理演算を設定(7.1) *テキストではV_Bird.size.heightとなっているがl_BirdTextureA.size().heightに修正
+        //物理演算を設定(7.1) *テキストではV_Bird.size.heightとなっているがl_BirdTextureA.size().heightに修正 (確認中)
+        //V_Bird.physicsBody = SKPhysicsBody(circleOfRadius: V_Bird.size().height / 2.0)
         V_Bird.physicsBody = SKPhysicsBody(circleOfRadius: l_BirdTextureA.size().height / 2.0)
+        
+        //衝突したときに回転させない(7.4)
+        V_Bird.physicsBody?.allowsRotation = false
+        
+        //衝突のカテゴリ設定(7.4)
+        V_Bird.physicsBody?.categoryBitMask = L_BirdCategory
+        V_Bird.physicsBody?.collisionBitMask = L_GroundCategory | L_WallCategory
+        V_Bird.physicsBody?.contactTestBitMask = L_GroundCategory | L_WallCategory
         
         //アニメーションを設定(6.4)
         V_Bird.run(l_Flap)
