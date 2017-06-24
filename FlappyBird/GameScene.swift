@@ -420,17 +420,68 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             v_StarX2 += l_StarGTexture.size().width / 2                            //壁の幅(=星の幅)半分だけずれるので調整
             v_StarX3 += l_StarGTexture.size().width / 2                            //壁の幅(=星の幅)半分だけずれるので調整
             
-            //金の星を作成(課題1)=>金の星を3つ作成(課題2)
+            //星の基準表示位置(y軸)(課題3)--------------------------------------------
+            //地面のTextureを取得(課題3)
+            let l_GroundTexture = SKTexture(imageNamed: "ground")
+            //地面の高さを取得(課題3)
+            let l_GroundHeight = l_GroundTexture.size().height
+            //空の高さを取得(課題3)
+            let l_SkyHeight = self.frame.size.height - l_GroundHeight
+            //空の中央4/5のエリアを星の表示位置としたときの下限(課題3)
+            let l_StarLowest_y = l_GroundHeight + l_SkyHeight / 10
+            //下限から星を表示可能な幅をレンジとして設定(課題3)
+            let l_StarRange_y = l_SkyHeight * 4 / 5
+            //レンジ内の値をランダムにとる(課題3)
+            let l_Random_y = arc4random_uniform (UInt32(l_StarRange_y))
+            //下限にランダム値を足して、基準表示位置(y軸を決定する)(課題3)
+            var v_StarY = UInt32(l_StarLowest_y)
+            v_StarY += l_Random_y
+            let l_StarYAsCGFloat = CGFloat(v_StarY)
+            //星の表示位置のランダム化(y軸)(課題3)--------------------------------------------
+            //基準表示位置からずらす幅の変数(課題3)
+            var v_RandomStarY1 = CGFloat(0)
+            var v_RandomStarY2 = CGFloat(0)
+            var v_RandomStarY3 = CGFloat(0)
+            //ずらす幅をランダムに決定するために0~2のランダムな数値をとる(課題3)
+            let l_Random1 = arc4random() % 3
+            let l_Random2 = arc4random() % 3
+            let l_Random3 = arc4random() % 3
+            //0の場合は基準位置、1の場合は基準位置より星1つ分上、2の場合は基準位置より星1つ分下にずらす(課題3)
+            if l_Random1 == 0 {
+            } else if l_Random1 == 1 {
+                v_RandomStarY1 = CGFloat(l_StarGTexture.size().height / 2)
+            } else {
+                v_RandomStarY1 = CGFloat(-l_StarGTexture.size().height / 2)
+            }
+            if l_Random2 == 0 {
+            } else if l_Random2 == 1 {
+                v_RandomStarY2 = CGFloat(l_StarGTexture.size().height / 2)
+            } else {
+                v_RandomStarY2 = CGFloat(-l_StarGTexture.size().height / 2)
+            }
+            if l_Random3 == 0 {
+            } else if l_Random3 == 1 {
+                v_RandomStarY3 = CGFloat(l_StarGTexture.size().height / 2)
+            } else {
+                v_RandomStarY3 = CGFloat(-l_StarGTexture.size().height / 2)
+            }
+            //基準位置とずらす幅から表示位置を決定(課題3)
+            let l_StarY1 = l_StarYAsCGFloat + v_RandomStarY1
+            let l_StarY2 = l_StarYAsCGFloat + v_RandomStarY2
+            let l_StarY3 = l_StarYAsCGFloat + v_RandomStarY3
+            
+            
+            //金の星を作成(課題1)=>金の星を3つ作成(課題2)=>星のy軸をランダム表示(課題3)
             let l_StarG1 = SKSpriteNode(texture:l_StarGTexture)
-            l_StarG1.position = CGPoint(x:v_StarX1, y:self.frame.size.width / 2)  //y軸仮置き
+            l_StarG1.position = CGPoint(x:v_StarX1, y:l_StarY1)
             l_Star.addChild(l_StarG1)
             
             let l_StarG2 = SKSpriteNode(texture:l_StarGTexture)
-            l_StarG2.position = CGPoint(x:v_StarX2, y:self.frame.size.width / 2)  //y軸仮置き
+            l_StarG2.position = CGPoint(x:v_StarX2, y:l_StarY2)
             l_Star.addChild(l_StarG2)
             
             let l_StarG3 = SKSpriteNode(texture:l_StarGTexture)
-            l_StarG3.position = CGPoint(x:v_StarX3, y:self.frame.size.width / 2)  //y軸仮置き
+            l_StarG3.position = CGPoint(x:v_StarX3, y:l_StarY3)
             l_Star.addChild(l_StarG3)
             
             //金の星にアクションを設定する---------------------------------------------------
