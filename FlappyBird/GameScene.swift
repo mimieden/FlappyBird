@@ -22,13 +22,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let L_GroundCategory: UInt32 = 1 << 1  //0...00010
     let L_WallCategory: UInt32 = 1 << 2    //0...00100
     let L_ScoreCategory: UInt32 = 1 << 3   //0...01000 *スコア用の物体壁の間に設定し衝突したらスコアカウントアップ
+    let L_ScoreStars: UInt32 = 1 << 4      //0...10000  //(課題4)
     
     //スコア(7.4)
     var V_Score = 0
     var V_ScoreLabelNode: SKLabelNode!                       //(8.2)
     var V_BestScoreLabelNode: SKLabelNode!                   //(8.2)
     let L_UserDefaults:UserDefaults = UserDefaults.standard  //(8.1)
-    
+    var V_ScoreStars = 0                                     //(課題4)
+
     //SKView上にシーンが表示されたときに呼ばれるメソッド(5.2)
     override func didMove(to view: SKView) {
         
@@ -267,7 +269,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //衝突のカテゴリ設定(7.4)
         V_Bird.physicsBody?.categoryBitMask = L_BirdCategory
         V_Bird.physicsBody?.collisionBitMask = L_GroundCategory | L_WallCategory
-        V_Bird.physicsBody?.contactTestBitMask = L_GroundCategory | L_WallCategory
+        V_Bird.physicsBody?.contactTestBitMask = L_GroundCategory | L_WallCategory | L_ScoreStars
         
         //アニメーションを設定(6.4)
         V_Bird.run(l_Flap)
@@ -314,6 +316,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 L_UserDefaults.set(v_BestScore, forKey: "BEST")
                 L_UserDefaults.synchronize()
             }
+        //星と衝突した(課題4)
+        } else if ((contact.bodyA.categoryBitMask & L_ScoreStars) == L_ScoreStars || (contact.bodyB.categoryBitMask & L_ScoreStars) == L_ScoreStars){
+            print("Star")
+            V_ScoreStars += 1
             
         } else {
             //壁か地面と衝突した
@@ -399,7 +405,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         
         //--------星を生成するアクションを作成する---------------------------------------------
-        //補正を生成するアクションを作成(課題1)
+        //星を生成するアクションを作成(課題1)
         let l_CreatStarAnimation = SKAction.run {
             //星ノードを乗せるノードを作成(課題1)
             let l_Star = SKNode()
@@ -483,6 +489,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let l_StarG3 = SKSpriteNode(texture:l_StarGTexture)
             l_StarG3.position = CGPoint(x:v_StarX3, y:l_StarY3)
             l_Star.addChild(l_StarG3)
+            
+            //金の星の衝突判定---------------------------------------------------
+            //スプライトに物理演算を設定する(課題4)
+            l_StarG1.physicsBody = SKPhysicsBody(circleOfRadius:l_StarGTexture.size().height / 2 )
+            l_StarG2.physicsBody = SKPhysicsBody(circleOfRadius:l_StarGTexture.size().height / 2 )
+            l_StarG3.physicsBody = SKPhysicsBody(circleOfRadius:l_StarGTexture.size().height / 2 )
+            
+            //衝突しても動かない(課題4)
+            l_StarG1.physicsBody?.isDynamic = false
+            l_StarG2.physicsBody?.isDynamic = false
+            l_StarG3.physicsBody?.isDynamic = false
+            
+            //衝突のカテゴリ設定(課題4)
+            l_StarG1.physicsBody?.categoryBitMask = self.L_ScoreStars
+            l_StarG2.physicsBody?.categoryBitMask = self.L_ScoreStars
+            l_StarG3.physicsBody?.categoryBitMask = self.L_ScoreStars
+            
+            //鳥との衝突(課題4)
+            l_StarG1.physicsBody?.contactTestBitMask = self.L_BirdCategory
+            l_StarG2.physicsBody?.contactTestBitMask = self.L_BirdCategory
+            l_StarG3.physicsBody?.contactTestBitMask = self.L_BirdCategory
             
             //金の星にアクションを設定する---------------------------------------------------
             //金の星にアニメーションを設定する(課題1)=>金の星3つにアニメーションを設定(課題2)
