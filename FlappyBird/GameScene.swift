@@ -15,12 +15,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var V_ScrollNode:SKNode! //(6.1)
     var V_WallNode:SKNode!   //(6.3)
     var V_Bird:SKSpriteNode! //(6.4)
+    var V_StarNode:SKNode!   //(課題1)
     
     //衝突判定カテゴリ(7.4)
     let L_BirdCategory: UInt32 = 1 << 0    //0...00001
     let L_GroundCategory: UInt32 = 1 << 1  //0...00010
     let L_WallCategory: UInt32 = 1 << 2    //0...00100
-    let L_ScoreCategory: UInt32 = 1 << 3    //0...01000 *スコア用の物体壁の間に設定し衝突したらスコアカウントアップ
+    let L_ScoreCategory: UInt32 = 1 << 3   //0...01000 *スコア用の物体壁の間に設定し衝突したらスコアカウントアップ
     
     //スコア(7.4)
     var V_Score = 0
@@ -47,12 +48,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         V_WallNode = SKNode()
         V_ScrollNode.addChild(V_WallNode)
         
+        //星用のノード(課題1)
+        V_StarNode = SKNode()
+        V_ScrollNode.addChild(V_StarNode)
+        
         //各種スプライトを生成する処理をメソッドに分割(6.2)
         F_SetUpGround()      //(6.2)
         F_SetUpCloud()       //(6.2)
         F_SetUpWall()        //(6.3)
         F_SetUpBird()        //(6.4)
         F_SetUpScoreLabel()  //(8.2)
+        F_SetUpStars()       //(課題1)
     }
     
     //地面のスクロールを関数化(6.2)
@@ -62,7 +68,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let l_GroundTexture = SKTexture(imageNamed: "ground")
         l_GroundTexture.filteringMode = SKTextureFilteringMode.nearest  //画像が荒くなっても処理速度を高める
         
-        //必要な枚数を計算(6.1) 
+        //必要な枚数を計算(6.1)
         let l_NeedGround = 2.0 + (frame.size.width / l_GroundTexture.size().width)
         
         //スクロールするアクションを作成(6.1)
@@ -97,19 +103,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             //衝突の時に動かないように設定する(7.2)
             l_GroundSprite.physicsBody?.isDynamic = false
             
-            
             //シーンにスプライトを追加する(5.3) →V_ScrollNodeに追加(6.1)
             V_ScrollNode.addChild(l_GroundSprite)
         }
     }
-        
+    
     //雲のスクロールを関数化(6.2)
     func F_SetUpCloud() {
-            
+        
         //雲の画像を読み込み(6.2)
         let l_CloudTexture = SKTexture(imageNamed: "cloud")
         l_CloudTexture.filteringMode = SKTextureFilteringMode.nearest
-            
+        
         //必要な枚数を計算(6.2)
         let l_NeedCloud = 2.0 + (frame.size.width / l_CloudTexture.size().width)
         
@@ -200,7 +205,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let l_Upper = SKSpriteNode(texture:l_WallTexture)
             l_Upper.position = CGPoint(x: 0.0, y: l_Under_Wall_y + l_WallTexture.size().height + l_Slit_Length)
             l_Wall.addChild(l_Upper)
-
+            
             //スプライトに物理演算を設定する(7.2)
             l_Upper.physicsBody = SKPhysicsBody(rectangleOf: l_WallTexture.size())  //(7.2)
             l_Upper.physicsBody?.categoryBitMask = self.L_WallCategory              //(7.4)
@@ -216,7 +221,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             l_ScoreNode.physicsBody?.categoryBitMask = self.L_ScoreCategory
             l_ScoreNode.physicsBody?.contactTestBitMask = self.L_BirdCategory
             l_Wall.addChild(l_ScoreNode)
-
+            
             //上下の壁にアニメーションを設定する(6.3)
             l_Wall.run(l_WallAnimation)
             
@@ -230,7 +235,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //壁を作成=>待ち時間=>壁を作成を無限に繰り返すアクションを作成(6.3)
         let l_RepeatForeverAnimation = SKAction.repeatForever(SKAction.sequence([l_CreateWallAnimation, l_WaitAnimation]))
-
+        
         //スプライトにアニメーションを設定する(6.3)
         V_WallNode.run(l_RepeatForeverAnimation)
     }
@@ -275,12 +280,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         //ゲーム中（= スクロールのスピード > 0）のタップ処理(7.5)
         if V_ScrollNode.speed > 0 {                             //ここも鳥の速度で判定したらダメなのか？
-          //鳥の速度を0にする(7.3)  ?重力を0?
-          V_Bird.physicsBody?.velocity = CGVector.zero
-          
-          //鳥に縦方向の力を与える(7.3)
-          V_Bird.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 15))
-        //ゲーム中以外（= 鳥のスピード = 0）のタップ処理(7.5)
+            //鳥の速度を0にする(7.3)  ?重力を0?
+            V_Bird.physicsBody?.velocity = CGVector.zero
+            
+            //鳥に縦方向の力を与える(7.3)
+            V_Bird.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 15))
+            //ゲーム中以外（= 鳥のスピード = 0）のタップ処理(7.5)
         } else if V_Bird.speed == 0 {
             F_Restart()
         }
@@ -364,5 +369,56 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let l_BestScore = L_UserDefaults.integer(forKey: "BEST")
         V_BestScoreLabelNode.text = "Best Score:\(l_BestScore)"
         self.addChild(V_BestScoreLabelNode)
+    }
+    
+    //星の表示を関数化(課題1)
+    func F_SetUpStars() {
+        
+        //--------星の画像を読み込む--------------------------------------------------------
+        //星の画像を読み込む(課題1)
+        let l_StarGTexture = SKTexture(imageNamed: "star_g")
+        l_StarGTexture.filteringMode = SKTextureFilteringMode.linear //当たり判定を行うのでlinearにする
+        
+        //--------星のアクションを作成する---------------------------------------------------
+        //移動する距離（=画面幅+星の幅）を計算(課題1)
+        let l_MoveDistance = CGFloat(self.frame.size.width + l_StarGTexture.size().width)
+        
+        //画面外まで移動するアクションを作成(課題1)
+        let l_MoveStar = SKAction.moveBy(x: -l_MoveDistance, y: 0, duration: 4.0)
+        
+        //自身を取り除くアクションを作成(課題1)
+        let l_RemoveStar = SKAction.removeFromParent()
+        
+        //2つのアニメーションを順に実行するアクションを作成(課題1)
+        let l_StarAnimation = SKAction.sequence([l_MoveStar, l_RemoveStar])
+        
+        //--------星を生成するアクションを作成する---------------------------------------------
+        //補正を生成するアクションを作成(課題1)
+        let l_CreatStarAnimation = SKAction.run {
+            //星ノードを乗せるノードを作成(課題1)
+            let l_Star = SKNode()
+            l_Star.position = CGPoint(x: self.frame.size.width + l_StarGTexture.size().width / 2, y: 0.0)  //xの位置がわからない ?
+            l_Star.zPosition = -50.0                      //雲より手前、地面より奥
+            
+            //金の星を作成(課題1)
+            let l_StarG = SKSpriteNode(texture:l_StarGTexture)
+            l_StarG.position = CGPoint(x:0.0, y:self.frame.size.width / 2)  //画面中央で仮置き
+            l_Star.addChild(l_StarG)
+            
+            //星ノードにアニメーションを設定する(課題1)
+            l_Star.run(l_StarAnimation)
+            
+            //スプライトを追加(課題1)
+            self.V_StarNode.addChild(l_Star)
+        }
+        //--------星を生成するアクションを作成する---------------------------------------------
+        //待ち時間のアクションを作成(課題1)
+        let l_WaitAnimation = SKAction.wait(forDuration:3)
+        
+        //星を作成=>待ち時間=>星を作成を無限に繰り返すアクションを作成(課題1)
+        let l_RepeatForeverAnimation = SKAction.repeatForever(SKAction.sequence([l_CreatStarAnimation, l_WaitAnimation]))
+        
+        //スプライトにアニメーションを設定する(課題1)
+        V_StarNode.run(l_RepeatForeverAnimation)
     }
 }
