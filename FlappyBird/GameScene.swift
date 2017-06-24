@@ -30,6 +30,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var V_BestScoreLabelNode: SKLabelNode!                   //(8.2)
     let L_UserDefaults:UserDefaults = UserDefaults.standard  //(8.1)
     var V_ScoreStars = 0                                     //(課題4)
+    var V_ScoreStarsLabelNode: SKLabelNode!                  //(課題5)
+    var V_BestStarsLabelNode: SKLabelNode!                   //(課題5)
 
     //SKView上にシーンが表示されたときに呼ばれるメソッド(5.2)
     override func didMove(to view: SKView) {
@@ -320,7 +322,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         } else if ((contact.bodyA.categoryBitMask & L_ScoreStars) == L_ScoreStars || (contact.bodyB.categoryBitMask & L_ScoreStars) == L_ScoreStars){
             print("Star")
             V_ScoreStars += 1
+            V_ScoreStarsLabelNode.text = "Star:\(V_ScoreStars)"
             
+            //ベストスコア更新か確認する
+            var v_BestStars = L_UserDefaults.integer(forKey: "BESTSTARS")
+            if V_ScoreStars > v_BestStars {
+                v_BestStars = V_ScoreStars
+                V_BestStarsLabelNode.text = "Best Stars:\(v_BestStars)"
+                L_UserDefaults.set(v_BestStars, forKey: "BESTSTARS")
+                L_UserDefaults.synchronize()
+            }
         } else {
             //壁か地面と衝突した
             print("GameOver")
@@ -343,6 +354,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //スコアを0にする
         V_Score = 0
         V_ScoreLabelNode.text = String("Score:\(V_Score)")  //(8.2)
+        V_ScoreStars = 0                                    //課題5
+        V_ScoreStarsLabelNode.text = String("Stars:\(V_ScoreStars)")  //課題5
         
         //鳥の設定
         V_Bird.position = CGPoint(x: self.frame.size.width * 0.2, y:self.frame.size.height * 0.7)
@@ -358,6 +371,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     //スコア/ベストスコアの表示(8.2)
     func F_SetUpScoreLabel() {
+        //現在スコア
         V_Score = 0
         V_ScoreLabelNode = SKLabelNode()
         V_ScoreLabelNode.fontColor = UIColor.black
@@ -367,15 +381,37 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         V_ScoreLabelNode.text = "Score:\(V_Score)"
         self.addChild(V_ScoreLabelNode)
         
+        //ベストスコア
         V_BestScoreLabelNode = SKLabelNode()
         V_BestScoreLabelNode.fontColor = UIColor.black
-        V_BestScoreLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 60)
+        V_BestScoreLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 90)
         V_BestScoreLabelNode.zPosition = 100 //一番手前
         V_BestScoreLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
         
         let l_BestScore = L_UserDefaults.integer(forKey: "BEST")
         V_BestScoreLabelNode.text = "Best Score:\(l_BestScore)"
         self.addChild(V_BestScoreLabelNode)
+        
+        //現在スター
+        V_ScoreStars = 0
+        V_ScoreStarsLabelNode = SKLabelNode()
+        V_ScoreStarsLabelNode.fontColor = UIColor.black
+        V_ScoreStarsLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 60)
+        V_ScoreStarsLabelNode.zPosition = 100 //一番手前
+        V_ScoreStarsLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
+        V_ScoreStarsLabelNode.text = "Stars:\(V_ScoreStars)"
+        self.addChild(V_ScoreStarsLabelNode)
+        
+        //ベストスコア
+        V_BestStarsLabelNode = SKLabelNode()
+        V_BestStarsLabelNode.fontColor = UIColor.black
+        V_BestStarsLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 120)
+        V_BestStarsLabelNode.zPosition = 100 //一番手前
+        V_BestStarsLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
+        
+        let l_BestStars = L_UserDefaults.integer(forKey: "BESTSTARS")
+        V_BestStarsLabelNode.text = "Best Stars:\(l_BestStars)"
+        self.addChild(V_BestStarsLabelNode)
     }
     
     //星の表示を関数化(課題1)
