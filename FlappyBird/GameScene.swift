@@ -230,8 +230,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
         })
         
-        //次の壁作成までの待ち時間のアクションを作成(6.3)
-        let l_WaitAnimation = SKAction.wait(forDuration: 2)
+        //次の壁作成までの待ち時間のアクションを作成(6.3) *Durationを2=>3にして壁の隙間を広げる(課題2)
+        //(画面幅+壁の幅)*l_WaitAnimationのDuration(3)/l_MoveWallのDulation(4) が(壁の隙間+壁の幅)(課題2)
+        let l_WaitAnimation = SKAction.wait(forDuration: 3)
         
         //壁を作成=>待ち時間=>壁を作成を無限に繰り返すアクションを作成(6.3)
         let l_RepeatForeverAnimation = SKAction.repeatForever(SKAction.sequence([l_CreateWallAnimation, l_WaitAnimation]))
@@ -379,7 +380,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let l_StarGTexture = SKTexture(imageNamed: "star_g")
         l_StarGTexture.filteringMode = SKTextureFilteringMode.linear //当たり判定を行うのでlinearにする
         
-        //--------星のアクションを作成する---------------------------------------------------
+        //--------星のアクションを生成する----------------------------------------------------
         //移動する距離（=画面幅+星の幅）を計算(課題1)
         let l_MoveDistance = CGFloat(self.frame.size.width + l_StarGTexture.size().width)
         
@@ -400,19 +401,45 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             l_Star.position = CGPoint(x: self.frame.size.width + l_StarGTexture.size().width / 2, y: 0.0)  //xの位置がわからない ?
             l_Star.zPosition = -50.0                      //雲より手前、地面より奥
             
-            //金の星を作成(課題1)
-            let l_StarG = SKSpriteNode(texture:l_StarGTexture)
-            l_StarG.position = CGPoint(x:0.0, y:self.frame.size.width / 2)  //画面中央で仮置き
-            l_Star.addChild(l_StarG)
+            //星の表示位置(x軸)(課題2)------------------------------------------------------
+            //壁の隙間を計算(課題2)
+            var v_WallToWall = self.frame.size.width + l_StarGTexture.size().width //画面幅 + 壁の幅(=星の幅)
+            v_WallToWall = v_WallToWall * 3 / 4                                    //壁の隙間 + 壁の幅(=星の幅)
+            v_WallToWall = v_WallToWall - l_StarGTexture.size().width              //壁の隙間
             
-            //星ノードにアニメーションを設定する(課題1)
-            l_Star.run(l_StarAnimation)
+            //星の表示位置x軸を計算 壁の隙間に3つ (X:0.0が壁の位置→0.0+隙間の3/10,隙間の5/10,隙間の7/10) (課題2)
+            var v_StarX1 = v_WallToWall * 3 / 10
+            var v_StarX2 = v_WallToWall * 5 / 10
+            var v_StarX3 = v_WallToWall * 7 / 10
+            v_StarX1 += l_StarGTexture.size().width / 2                            //壁の幅(=星の幅)半分だけずれるので調整
+            v_StarX2 += l_StarGTexture.size().width / 2                            //壁の幅(=星の幅)半分だけずれるので調整
+            v_StarX3 += l_StarGTexture.size().width / 2                            //壁の幅(=星の幅)半分だけずれるので調整
+            
+            //金の星を作成(課題1)=>金の星を3つ作成(課題2)
+            let l_StarG1 = SKSpriteNode(texture:l_StarGTexture)
+            l_StarG1.position = CGPoint(x:v_StarX1, y:self.frame.size.width / 2)  //y軸仮置き
+            l_Star.addChild(l_StarG1)
+            
+            let l_StarG2 = SKSpriteNode(texture:l_StarGTexture)
+            l_StarG2.position = CGPoint(x:v_StarX2, y:self.frame.size.width / 2)  //y軸仮置き
+            l_Star.addChild(l_StarG2)
+            
+            let l_StarG3 = SKSpriteNode(texture:l_StarGTexture)
+            l_StarG3.position = CGPoint(x:v_StarX3, y:self.frame.size.width / 2)  //y軸仮置き
+            l_Star.addChild(l_StarG3)
+            
+            //金の星にアクションを設定する---------------------------------------------------
+            //金の星にアニメーションを設定する(課題1)=>金の星3つにアニメーションを設定(課題2)
+            l_StarG1.run(l_StarAnimation)
+            l_StarG2.run(l_StarAnimation)
+            l_StarG3.run(l_StarAnimation)
             
             //スプライトを追加(課題1)
             self.V_StarNode.addChild(l_Star)
         }
         //--------星を生成するアクションを作成する---------------------------------------------
-        //待ち時間のアクションを作成(課題1)
+        //待ち時間のアクションを作成(課題1) Durationを2=>3に変更(課題2)
+        //(画面幅+星の幅)*l_WaitAnimationのDuration(3)/l_MoveWallのDulation(4) が(壁の隙間+星の幅)
         let l_WaitAnimation = SKAction.wait(forDuration:3)
         
         //星を作成=>待ち時間=>星を作成を無限に繰り返すアクションを作成(課題1)
