@@ -381,17 +381,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         l_StarGTexture.filteringMode = SKTextureFilteringMode.linear //当たり判定を行うのでlinearにする
         
         //--------星のアクションを生成する----------------------------------------------------
-        //移動する距離（=画面幅+星の幅）を計算(課題1)
-        let l_MoveDistance = CGFloat(self.frame.size.width + l_StarGTexture.size().width)
+        //移動する距離（=画面幅+星の幅+消えるまでの余裕）を計算(課題1)
+        var v_MoveDistance = CGFloat(self.frame.size.width + l_StarGTexture.size().width)
+        v_MoveDistance *= 2  //(課題2)この幅で移動を繰り返すと星が早めに消えてしまうので幅2倍で移動を繰り返す
         
         //画面外まで移動するアクションを作成(課題1)
-        let l_MoveStar = SKAction.moveBy(x: -l_MoveDistance, y: 0, duration: 4.0)
+        let l_MoveStar = SKAction.moveBy(x: -v_MoveDistance, y: 0, duration: 8.0)  //(課題2)幅2倍にしたのでdureation 4 => 8に変更
         
         //自身を取り除くアクションを作成(課題1)
         let l_RemoveStar = SKAction.removeFromParent()
         
+        //let l_WaitDeletion = SKAction.wait(forDuration:1)
+        
         //2つのアニメーションを順に実行するアクションを作成(課題1)
+        //let l_StarAnimation = SKAction.sequence([l_MoveStar, l_WaitDeletion, l_RemoveStar])
         let l_StarAnimation = SKAction.sequence([l_MoveStar, l_RemoveStar])
+
         
         //--------星を生成するアクションを作成する---------------------------------------------
         //補正を生成するアクションを作成(課題1)
