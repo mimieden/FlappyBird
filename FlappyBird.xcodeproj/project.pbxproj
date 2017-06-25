@@ -14,6 +14,7 @@
 		1D36A6991EFAE2990040DFDD /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1D36A6971EFAE2990040DFDD /* LaunchScreen.storyboard */; };
 		1D36A6A21EFAE2F20040DFDD /* SpriteKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D36A6A11EFAE2F20040DFDD /* SpriteKit.framework */; };
 		1D36A6A41EFAE6030040DFDD /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D36A6A31EFAE6030040DFDD /* GameScene.swift */; };
+		1D99BCDF1EFFA55300435F7C /* Star.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 1D99BCDE1EFFA55300435F7C /* Star.mp3 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 		1D36A69A1EFAE2990040DFDD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1D36A6A11EFAE2F20040DFDD /* SpriteKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SpriteKit.framework; path = System/Library/Frameworks/SpriteKit.framework; sourceTree = SDKROOT; };
 		1D36A6A31EFAE6030040DFDD /* GameScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		1D99BCDE1EFFA55300435F7C /* Star.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = Star.mp3; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +62,7 @@
 		1D36A68D1EFAE2990040DFDD /* FlappyBird */ = {
 			isa = PBXGroup;
 			children = (
+				1D99BCDD1EFFA52700435F7C /* Sound */,
 				1D36A68E1EFAE2990040DFDD /* AppDelegate.swift */,
 				1D36A6901EFAE2990040DFDD /* ViewController.swift */,
 				1D36A6921EFAE2990040DFDD /* Main.storyboard */,
@@ -77,6 +80,14 @@
 				1D36A6A11EFAE2F20040DFDD /* SpriteKit.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		1D99BCDD1EFFA52700435F7C /* Sound */ = {
+			isa = PBXGroup;
+			children = (
+				1D99BCDE1EFFA55300435F7C /* Star.mp3 */,
+			);
+			name = Sound;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -139,6 +150,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1D99BCDF1EFFA55300435F7C /* Star.mp3 in Resources */,
 				1D36A6991EFAE2990040DFDD /* LaunchScreen.storyboard in Resources */,
 				1D36A6961EFAE2990040DFDD /* Assets.xcassets in Resources */,
 				1D36A6941EFAE2990040DFDD /* Main.storyboard in Resources */,

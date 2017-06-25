@@ -272,7 +272,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         V_Bird.physicsBody?.categoryBitMask = L_BirdCategory
         V_Bird.physicsBody?.collisionBitMask = L_GroundCategory | L_WallCategory
         V_Bird.physicsBody?.contactTestBitMask = L_GroundCategory | L_WallCategory | L_ScoreStars
-        
+       
         //アニメーションを設定(6.4)
         V_Bird.run(l_Flap)
         
@@ -321,6 +321,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //星と衝突した(課題4)
         } else if ((contact.bodyA.categoryBitMask & L_ScoreStars) == L_ScoreStars || (contact.bodyB.categoryBitMask & L_ScoreStars) == L_ScoreStars){
             print("Star")
+            
+            //星を非表示に
+            //V_StarNode.isHidden = true // →全部非表示になるのでだめ
+            
+            // 星を削除する
+            if (contact.bodyA.categoryBitMask & L_ScoreStars) == L_ScoreStars {
+                contact.bodyA.node!.removeFromParent()
+            } else {
+                contact.bodyB.node!.removeFromParent()
+            }
+            
+            //let playSound = SKAction.play()
+            //itemSound.run(playSound)
+            let l_Action = SKAction.playSoundFileNamed("Star.mp3", waitForCompletion: true)
+            //アクションを実行する。
+            run(l_Action)
+            
+            
+            
             V_ScoreStars += 1
             V_ScoreStarsLabelNode.text = "Star:\(V_ScoreStars)"
             
