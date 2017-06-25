@@ -30,21 +30,14 @@ class ViewController: UIViewController {
         L_SkView.presentScene(L_Scene)
         
         //衝突判定のPhysicsBodyが見えるようにする
-        L_SkView.showsPhysics = true
+        //L_SkView.showsPhysics = true
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-    
     //ステータスバーを消す(6.3)
     override var prefersStatusBarHidden: Bool {
         get {
             return true
         }
     }
-
-
 }
 

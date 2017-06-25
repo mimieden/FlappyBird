@@ -5,41 +5,66 @@
 //  Created by mimieden on 2017/06/22.
 //  Copyright © 2017年 mimieden. All rights reserved.
 //
+//==================================================
+// ノード設定
+// SKNode
+//  |-V_Bird(SKSpriteNode)            //宣言：class GameScene インスタンス化/追加：func F_SetUpBird
+//  |-V_ScrollNode(SKNode)            //宣言：class GameScene インスタンス化/追加：func didMove
+//     |-l_GroundSprite(SKSpriteNode) //宣言/インスタンス化/追加：func F_SetUpGround
+//     |-l_CloudSprite(SKSpriteNode)  //宣言/インスタンス化/追加：func F_SetUpCloud
+//     |-V_WallNode(SKNode)           //宣言：class GameScene インスタンス化/追加：func didMove
+//        |-l_Wall(SKNode)            //宣言/インスタンス化/追加：func F_SetUpWall
+//          |-l_Upper(SKSpriteNode)   //宣言/インスタンス化/追加：func F_SetUpWall
+//          |-l_Under(SKSpriteNode)   //宣言/インスタンス化/追加：func F_SetUpWall
+//     |-V_StarNode(SKNode)           //宣言：class GameScene インスタンス化/追加：func didMove
+//        |-l_Star(SKNode)            //宣言/インスタンス化/追加：func F_SetUpStar
+//          |-l_StarG1(SKSpriteNode)  //宣言/インスタンス化/追加：func F_SetUpStar
+//          |-l_StarG2(SKSpriteNode)  //宣言/インスタンス化/追加：func F_SetUpStar
+//          |-l_StarG3(SKSpriteNode)  //宣言/インスタンス化/追加：func F_SetUpStar
+//==================================================
 
 import SpriteKit  //import UIKitを書き換え(5.1)
 
 //プロトコルを追加(7.4)
 class GameScene: SKScene, SKPhysicsContactDelegate {
+  
+//==================================================
+// グローバル変数/定数
+//==================================================
+//--ノード-------------------------------------------
+    var V_ScrollNode:SKNode!  //(6.1)
+    var V_WallNode:SKNode!    //(6.3)
+    var V_Bird:SKSpriteNode!  //(6.4)
+    var V_StarNode:SKNode!    //(課題1)
     
-    //(6.1)
-    var V_ScrollNode:SKNode! //(6.1)
-    var V_WallNode:SKNode!   //(6.3)
-    var V_Bird:SKSpriteNode! //(6.4)
-    var V_StarNode:SKNode!   //(課題1)
-    
-    //衝突判定カテゴリ(7.4)
-    let L_BirdCategory: UInt32 = 1 << 0    //0...00001
+//--衝突カテゴリ--------------------------------------
+    let L_BirdCategory:   UInt32 = 1 << 0  //0...00001
     let L_GroundCategory: UInt32 = 1 << 1  //0...00010
-    let L_WallCategory: UInt32 = 1 << 2    //0...00100
-    let L_ScoreCategory: UInt32 = 1 << 3   //0...01000 *スコア用の物体壁の間に設定し衝突したらスコアカウントアップ
-    let L_ScoreStars: UInt32 = 1 << 4      //0...10000  //(課題4)
+    let L_WallCategory:   UInt32 = 1 << 2  //0...00100
+    let L_ScoreCategory:  UInt32 = 1 << 3  //0...01000 *スコア用の物体壁の間に設定し衝突したらスコアカウントアップ
+    let L_ScoreStars:     UInt32 = 1 << 4  //0...10000  (課題4)
     
-    //スコア(7.4)
+//--スコア用-----------------------------------------
+    //スコア(Wall)
     var V_Score = 0
     var V_ScoreLabelNode: SKLabelNode!                       //(8.2)
     var V_BestScoreLabelNode: SKLabelNode!                   //(8.2)
-    let L_UserDefaults:UserDefaults = UserDefaults.standard  //(8.1)
+    //スコア(Star)
     var V_ScoreStars = 0                                     //(課題4)
     var V_ScoreStarsLabelNode: SKLabelNode!                  //(課題5)
     var V_BestStarsLabelNode: SKLabelNode!                   //(課題5)
+    //ユーザー初期値
+    let L_UserDefaults:UserDefaults = UserDefaults.standard  //(8.1)
 
-    //SKView上にシーンが表示されたときに呼ばれるメソッド(5.2)
+//==================================================
+// 関数 (タイミング起動)
+//==================================================
+//--SKView上にシーンが表示されたときに呼ばれるメソッド(5.2)--
     override func didMove(to view: SKView) {
         
         //重力を設定(7.1)
         physicsWorld.gravity = CGVector(dx: 0.0, dy: -4.0)  //(7.1)
         physicsWorld.contactDelegate = self                 //(7.4)
-        
         
         //背景色を設定(5.2)
         backgroundColor = UIColor(colorLiteralRed: 0.15, green: 0.75, blue: 0.90, alpha: 1)
@@ -60,12 +85,168 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         F_SetUpGround()      //(6.2)
         F_SetUpCloud()       //(6.2)
         F_SetUpWall()        //(6.3)
+        F_SetUpStars()       //(課題1)
         F_SetUpBird()        //(6.4)
         F_SetUpScoreLabel()  //(8.2)
-        F_SetUpStars()       //(課題1)
     }
     
-    //地面のスクロールを関数化(6.2)
+//--画面をタップしたときに呼ばれるメソッド(7.3)---------------
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+        //ゲーム中（= スクロールのスピード > 0）のタップ処理(7.5)
+        if V_ScrollNode.speed > 0 {                                    //ゲーム中（= スクロールのスピード > 0）のタップ処理(7.5)
+            V_Bird.physicsBody?.velocity = CGVector.zero               //鳥の速度を0にする(7.3)
+            V_Bird.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 15))  //鳥に縦方向の力を与える(7.3)
+            
+        } else if V_Bird.speed == 0 {                                  //ゲーム中以外（= 鳥のスピード = 0）のタップ処理(7.5)
+            F_Restart()
+        }
+    }
+    
+//--衝突したときに呼ばれるメソッド(7.4)----------------------
+//--SKPhysicsContactDelegateのメソッド-------------------
+    func didBegin(_ contact: SKPhysicsContact) {
+        //ゲームオーバーのときは何もしない
+        if V_ScrollNode.speed <= 0 {
+            return
+        }
+        
+        //衝突時のロジック(壁の隙間と衝突した)
+        if (contact.bodyA.categoryBitMask & L_ScoreCategory) == L_ScoreCategory || (contact.bodyB.categoryBitMask & L_ScoreCategory) == L_ScoreCategory {
+            
+            //スコアカウントと表示
+            print("ScoreUp")
+            V_Score += 1
+            V_ScoreLabelNode.text = "Score:\(V_Score)"  //(8.2)
+            
+            //ベストスコア更新か確認する(8.1)
+            var v_BestScore = L_UserDefaults.integer(forKey: "BEST")
+            if V_Score > v_BestScore {
+                v_BestScore = V_Score
+                V_BestScoreLabelNode.text = "Best Score:\(v_BestScore)"  //(8.2)
+                L_UserDefaults.set(v_BestScore, forKey: "BEST")
+                L_UserDefaults.synchronize()
+            }
+        //衝突時のロジック(星と衝突した)
+        } else if ((contact.bodyA.categoryBitMask & L_ScoreStars) == L_ScoreStars || (contact.bodyB.categoryBitMask & L_ScoreStars) == L_ScoreStars){
+            
+            //効果音を出す
+            let l_Action = SKAction.playSoundFileNamed("Star.mp3", waitForCompletion: true)
+            run(l_Action)
+            
+            //星を削除する
+            if (contact.bodyA.categoryBitMask & L_ScoreStars) == L_ScoreStars {
+                contact.bodyA.node!.removeFromParent()
+            } else {
+                contact.bodyB.node!.removeFromParent()
+            }
+            
+            //スコアカウントと表示
+            print("Star")
+            V_ScoreStars += 1
+            V_ScoreStarsLabelNode.text = "Star:\(V_ScoreStars)"
+            
+            //ベストスコア更新か確認する
+            var v_BestStars = L_UserDefaults.integer(forKey: "BESTSTARS")
+            if V_ScoreStars > v_BestStars {
+                v_BestStars = V_ScoreStars
+                V_BestStarsLabelNode.text = "Best Stars:\(v_BestStars)"
+                L_UserDefaults.set(v_BestStars, forKey: "BESTSTARS")
+                L_UserDefaults.synchronize()
+            }
+        //衝突時のロジック(壁か地面)
+        } else {
+            print("GameOver")
+            
+            //スクロールを停止させる
+            V_ScrollNode.speed = 0
+            
+            V_Bird.physicsBody?.collisionBitMask = L_GroundCategory
+            
+            let roll = SKAction.rotate(byAngle: CGFloat(Double.pi) * CGFloat(V_Bird.position.y) * 0.01, duration:1)
+            V_Bird.run(roll, completion:{
+                self.V_Bird.speed = 0
+            })
+        }
+    }
+    
+//==================================================
+// 関数（他関数からの呼び出し)
+//==================================================
+//--スコア表示(8.2/課題)-------------------------------
+    func F_SetUpScoreLabel() {
+        //現在スコア
+        V_Score = 0
+        V_ScoreLabelNode = SKLabelNode()
+        V_ScoreLabelNode.fontColor = UIColor.black
+        V_ScoreLabelNode.fontSize = 12
+        V_ScoreLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 15)
+        V_ScoreLabelNode.zPosition = 100 //一番手前
+        V_ScoreLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
+        V_ScoreLabelNode.text = "Score:\(V_Score)"
+        self.addChild(V_ScoreLabelNode)
+        
+        //ベストスコア
+        V_BestScoreLabelNode = SKLabelNode()
+        V_BestScoreLabelNode.fontColor = UIColor.black
+        V_BestScoreLabelNode.fontSize = 12
+        V_BestScoreLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 45)
+        V_BestScoreLabelNode.zPosition = 100 //一番手前
+        V_BestScoreLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
+        
+        let l_BestScore = L_UserDefaults.integer(forKey: "BEST")
+        V_BestScoreLabelNode.text = "Best Score:\(l_BestScore)"
+        self.addChild(V_BestScoreLabelNode)
+        
+        //現在スター
+        V_ScoreStars = 0
+        V_ScoreStarsLabelNode = SKLabelNode()
+        V_ScoreStarsLabelNode.fontColor = UIColor.black
+        V_ScoreStarsLabelNode.fontSize = 12
+        V_ScoreStarsLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 30)
+        V_ScoreStarsLabelNode.zPosition = 100 //一番手前
+        V_ScoreStarsLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
+        V_ScoreStarsLabelNode.text = "Stars:\(V_ScoreStars)"
+        self.addChild(V_ScoreStarsLabelNode)
+        
+        //ベストスター
+        V_BestStarsLabelNode = SKLabelNode()
+        V_BestStarsLabelNode.fontColor = UIColor.black
+        V_BestStarsLabelNode.fontSize = 12
+        V_BestStarsLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 60)
+        V_BestStarsLabelNode.zPosition = 100 //一番手前
+        V_BestStarsLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
+        
+        let l_BestStars = L_UserDefaults.integer(forKey: "BESTSTARS")
+        V_BestStarsLabelNode.text = "Best Stars:\(l_BestStars)"
+        self.addChild(V_BestStarsLabelNode)
+    }
+    
+//--リスタート（リトライ）処理で呼ばれるメソッド(7.5)----------------------
+    func F_Restart() {
+        
+        //スコアを0にする
+        V_Score = 0
+        V_ScoreLabelNode.text = String("Score:\(V_Score)")  //(8.2)
+        V_ScoreStars = 0                                    //課題5
+        V_ScoreStarsLabelNode.text = String("Stars:\(V_ScoreStars)")  //課題5
+        
+        //鳥の設定
+        V_Bird.position = CGPoint(x: self.frame.size.width * 0.2, y:self.frame.size.height * 0.7)
+        V_Bird.physicsBody?.velocity = CGVector.zero
+        V_Bird.physicsBody?.collisionBitMask = L_GroundCategory | L_WallCategory
+        V_Bird.zRotation = 0.0
+        
+        V_WallNode.removeAllChildren()
+        V_StarNode.removeAllChildren()
+        
+        V_Bird.speed = 1
+        V_ScrollNode.speed = 1
+    }
+//==================================================
+// 関数（各種スプライトを生成）
+//==================================================
+//--地面のスクロールを関数化(6.2)------------------------
     func F_SetUpGround() {
         
         //地面の画像を読み込み(5.3)
@@ -112,7 +293,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    //雲のスクロールを関数化(6.2)
+//--雲のスクロールを関数化(6.2)--------------------------
     func F_SetUpCloud() {
         
         //雲の画像を読み込み(6.2)
@@ -153,7 +334,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    //壁のスクロールを関数化(6.3)
+//--壁のスクロールを関数化(6.3)--------------------------
     func F_SetUpWall() {
         
         //壁の画像を読み込み(6.3)
@@ -245,7 +426,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         V_WallNode.run(l_RepeatForeverAnimation)
     }
     
-    //鳥の表示を関数化(6.4)
+//--鳥の表示を関数化(6.4)----------------------------------
     func F_SetUpBird() {
         
         //鳥の画像を2種類読み込む(6.4)
@@ -280,168 +461,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(V_Bird)
     }
     
-    //画面をタップしたときに呼ばれる(7.3)
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
-        //ゲーム中（= スクロールのスピード > 0）のタップ処理(7.5)
-        if V_ScrollNode.speed > 0 {                             //ここも鳥の速度で判定したらダメなのか？
-            //鳥の速度を0にする(7.3)  ?重力を0?
-            V_Bird.physicsBody?.velocity = CGVector.zero
-            
-            //鳥に縦方向の力を与える(7.3)
-            V_Bird.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 15))
-            //ゲーム中以外（= 鳥のスピード = 0）のタップ処理(7.5)
-        } else if V_Bird.speed == 0 {
-            F_Restart()
-        }
-    }
-    
-    //SKPhysicsContactDelegateのメソッド。衝突したときに呼ばれる(7.4)
-    func didBegin(_ contact: SKPhysicsContact) {
-        //ゲームオーバーのときは何もしない
-        if V_ScrollNode.speed <= 0 {
-            return
-        }
-        
-        //衝突時のロジック
-        if (contact.bodyA.categoryBitMask & L_ScoreCategory) == L_ScoreCategory || (contact.bodyB.categoryBitMask & L_ScoreCategory) == L_ScoreCategory {
-            //スコア用の物体と衝突した
-            print("ScoreUp")
-            V_Score += 1
-            V_ScoreLabelNode.text = "Score:\(V_Score)"  //(8.2)
-            
-            //ベストスコア更新か確認する(8.1)
-            var v_BestScore = L_UserDefaults.integer(forKey: "BEST")
-            if V_Score > v_BestScore {
-                v_BestScore = V_Score
-                V_BestScoreLabelNode.text = "Best Score:\(v_BestScore)"  //(8.2)
-                L_UserDefaults.set(v_BestScore, forKey: "BEST")
-                L_UserDefaults.synchronize()
-            }
-        //星と衝突した(課題4)
-        } else if ((contact.bodyA.categoryBitMask & L_ScoreStars) == L_ScoreStars || (contact.bodyB.categoryBitMask & L_ScoreStars) == L_ScoreStars){
-            print("Star")
-            
-            //星を非表示に
-            //V_StarNode.isHidden = true // →全部非表示になるのでだめ
-            
-            // 星を削除する
-            if (contact.bodyA.categoryBitMask & L_ScoreStars) == L_ScoreStars {
-                contact.bodyA.node!.removeFromParent()
-            } else {
-                contact.bodyB.node!.removeFromParent()
-            }
-            
-            //let playSound = SKAction.play()
-            //itemSound.run(playSound)
-            let l_Action = SKAction.playSoundFileNamed("Star.mp3", waitForCompletion: true)
-            //アクションを実行する。
-            run(l_Action)
-            
-            
-            
-            V_ScoreStars += 1
-            V_ScoreStarsLabelNode.text = "Star:\(V_ScoreStars)"
-            
-            //ベストスコア更新か確認する
-            var v_BestStars = L_UserDefaults.integer(forKey: "BESTSTARS")
-            if V_ScoreStars > v_BestStars {
-                v_BestStars = V_ScoreStars
-                V_BestStarsLabelNode.text = "Best Stars:\(v_BestStars)"
-                L_UserDefaults.set(v_BestStars, forKey: "BESTSTARS")
-                L_UserDefaults.synchronize()
-            }
-        } else {
-            //壁か地面と衝突した
-            print("GameOver")
-            
-            //スクロールを停止させる
-            V_ScrollNode.speed = 0
-            
-            V_Bird.physicsBody?.collisionBitMask = L_GroundCategory
-            
-            let roll = SKAction.rotate(byAngle: CGFloat(Double.pi) * CGFloat(V_Bird.position.y) * 0.01, duration:1)
-            V_Bird.run(roll, completion:{
-                self.V_Bird.speed = 0
-            })
-        }
-    }
-    
-    //リスタート（リトライ）処理(7.5)
-    func F_Restart() {
-        
-        //スコアを0にする
-        V_Score = 0
-        V_ScoreLabelNode.text = String("Score:\(V_Score)")  //(8.2)
-        V_ScoreStars = 0                                    //課題5
-        V_ScoreStarsLabelNode.text = String("Stars:\(V_ScoreStars)")  //課題5
-        
-        //鳥の設定
-        V_Bird.position = CGPoint(x: self.frame.size.width * 0.2, y:self.frame.size.height * 0.7)
-        V_Bird.physicsBody?.velocity = CGVector.zero
-        V_Bird.physicsBody?.collisionBitMask = L_GroundCategory | L_WallCategory
-        V_Bird.zRotation = 0.0
-        
-        V_WallNode.removeAllChildren()
-        
-        V_Bird.speed = 1
-        V_ScrollNode.speed = 1
-    }
-    
-    //スコア/ベストスコアの表示(8.2)
-    func F_SetUpScoreLabel() {
-        //現在スコア
-        V_Score = 0
-        V_ScoreLabelNode = SKLabelNode()
-        V_ScoreLabelNode.fontColor = UIColor.black
-        V_ScoreLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 30)
-        V_ScoreLabelNode.zPosition = 100 //一番手前
-        V_ScoreLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
-        V_ScoreLabelNode.text = "Score:\(V_Score)"
-        self.addChild(V_ScoreLabelNode)
-        
-        //ベストスコア
-        V_BestScoreLabelNode = SKLabelNode()
-        V_BestScoreLabelNode.fontColor = UIColor.black
-        V_BestScoreLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 90)
-        V_BestScoreLabelNode.zPosition = 100 //一番手前
-        V_BestScoreLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
-        
-        let l_BestScore = L_UserDefaults.integer(forKey: "BEST")
-        V_BestScoreLabelNode.text = "Best Score:\(l_BestScore)"
-        self.addChild(V_BestScoreLabelNode)
-        
-        //現在スター
-        V_ScoreStars = 0
-        V_ScoreStarsLabelNode = SKLabelNode()
-        V_ScoreStarsLabelNode.fontColor = UIColor.black
-        V_ScoreStarsLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 60)
-        V_ScoreStarsLabelNode.zPosition = 100 //一番手前
-        V_ScoreStarsLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
-        V_ScoreStarsLabelNode.text = "Stars:\(V_ScoreStars)"
-        self.addChild(V_ScoreStarsLabelNode)
-        
-        //ベストスコア
-        V_BestStarsLabelNode = SKLabelNode()
-        V_BestStarsLabelNode.fontColor = UIColor.black
-        V_BestStarsLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 120)
-        V_BestStarsLabelNode.zPosition = 100 //一番手前
-        V_BestStarsLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
-        
-        let l_BestStars = L_UserDefaults.integer(forKey: "BESTSTARS")
-        V_BestStarsLabelNode.text = "Best Stars:\(l_BestStars)"
-        self.addChild(V_BestStarsLabelNode)
-    }
-    
-    //星の表示を関数化(課題1)
+//--星の表示を関数化(課題)----------------------------------
     func F_SetUpStars() {
         
-        //--------星の画像を読み込む--------------------------------------------------------
         //星の画像を読み込む(課題1)
         let l_StarGTexture = SKTexture(imageNamed: "star_g")
         l_StarGTexture.filteringMode = SKTextureFilteringMode.linear //当たり判定を行うのでlinearにする
         
-        //--------星のアクションを生成する----------------------------------------------------
+        //--------星のアクションを生成する-------------------
         //移動する距離（=画面幅+星の幅+消えるまでの余裕）を計算(課題1)
         var v_MoveDistance = CGFloat(self.frame.size.width + l_StarGTexture.size().width)
         v_MoveDistance *= 2  //(課題2)この幅で移動を繰り返すと星が早めに消えてしまうので幅2倍で移動を繰り返す
